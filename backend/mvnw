@@ -10,6 +10,13 @@ else
   JAVACMD="$JAVA_HOME/bin/java"
 fi
 
+if [ -z "$JAVACMD" ] || [ ! -x "$JAVACMD" ] ; then
+  echo "Error: Java (JDK) could not be found." >&2
+  echo "JAVA_HOME is not set and no 'java' executable was found in PATH." >&2
+  echo "Note: Render's Node runtime does not include Java. On Render, set Environment to 'Docker'." >&2
+  exit 1
+fi
+
 # Determine the script directory
 SCRIPT_DIR=`dirname "$0"`
 MAVEN_PROJECTBASEDIR="$SCRIPT_DIR"
