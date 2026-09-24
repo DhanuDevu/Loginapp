@@ -15,6 +15,7 @@ const Signup = () => {
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [slowNotice, setSlowNotice] = useState(false);
   const [serverError, setServerError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -79,6 +80,12 @@ const Signup = () => {
     }
 
     setLoading(true);
+    setSlowNotice(false);
+
+    const timer = setTimeout(() => {
+      setSlowNotice(true);
+    }, 2500);
+
     try {
       await registerUser({
         name: formData.name.trim(),
@@ -94,7 +101,9 @@ const Signup = () => {
     } catch (err) {
       setServerError(err.message || 'Registration failed. Please try again.');
     } finally {
+      clearTimeout(timer);
       setLoading(false);
+      setSlowNotice(false);
     }
   };
 
@@ -250,6 +259,13 @@ const Signup = () => {
               'Sign Up'
             )}
           </button>
+
+          {loading && slowNotice && (
+            <div className="server-status-pill">
+              <span className="server-status-dot"></span>
+              <span>Waking up cloud server (Render free tier can take ~30-50s on initial load)...</span>
+            </div>
+          )}
         </form>
 
         {/* Hyperlink below it to redirect to Login page */}

@@ -1,5 +1,18 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
+let hasPinged = false;
+
+/**
+ * Proactively wake up backend instance (triggers Render free-tier cold start in background)
+ */
+export const pingBackend = () => {
+  if (hasPinged) return;
+  hasPinged = true;
+  fetch(`${API_BASE_URL}/auth/health`, { method: 'GET' }).catch(() => {
+    // Ignore errors silently as this is purely a pre-warm ping
+  });
+};
+
 /**
  * Helper to get stored auth token
  */
@@ -36,17 +49,33 @@ export const clearAuthSession = () => {
   localStorage.removeItem('reglog_user');
 };
 
+const handleNetworkError = (err) => {
+  const isProd = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+  if (err.name === 'TypeError' || err.message === 'Failed to fetch') {
+    if (isProd && (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1'))) {
+      throw new Error('Backend URL is not configured on Vercel! Please add VITE_API_BASE_URL to your Vercel Environment Variables and redeploy.');
+    }
+    throw new Error('Cannot connect to the backend server. The cloud server may still be waking up — please wait a moment and try again.');
+  }
+  throw err;
+};
+
 /**
  * Signup (Register) API call -> User Service
  */
 export const registerUser = async (userData) => {
-  const response = await fetch(`${API_BASE_URL}/users/register`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(userData)
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}/users/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(userData)
+    });
+  } catch (err) {
+    handleNetworkError(err);
+  }
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -59,13 +88,18 @@ export const registerUser = async (userData) => {
  * Login API call -> Authentication Service
  */
 export const loginUser = async (credentials) => {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(credentials)
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(credentials)
+    });
+  } catch (err) {
+    handleNetworkError(err);
+  }
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -78,13 +112,18 @@ export const loginUser = async (credentials) => {
  * Validate JWT Token -> Authentication Service
  */
 export const validateToken = async (token) => {
-  const response = await fetch(`${API_BASE_URL}/auth/validate`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ token })
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}/auth/validate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ token })
+    });
+  } catch (err) {
+    handleNetworkError(err);
+  }
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -100,11 +139,16 @@ export const fetchCurrentUser = async () => {
   const token = getStoredToken();
   if (!token) throw new Error('No token found');
 
-  const response = await fetch(`${API_BASE_URL}/users/me`, {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}/users/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  } catch (err) {
+    handleNetworkError(err);
+  }
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {

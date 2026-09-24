@@ -8,21 +8,25 @@ services:
     envVars:
       - key: PORT
         value: 8080
+      - key: SPRING_DATASOURCE_URL
+        sync: false
       - key: DB_HOST
         sync: false
       - key: DB_PORT
-        value: 3306
+        sync: false
       - key: DB_NAME
-        value: reglog_db
+        sync: false
       - key: DB_USERNAME
         sync: false
       - key: DB_PASSWORD
         sync: false
+      - key: DB_SSL_MODE
+        value: REQUIRED
       - key: DB_USE_SSL
-        value: false
+        value: true
       - key: DB_REQUIRE_SSL
-        value: false
+        value: true
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ALLOWED_ORIGINS
-        value: http://localhost:5173
+        value: http://localhost:5173,http://localhost:3000,https://*.vercel.app

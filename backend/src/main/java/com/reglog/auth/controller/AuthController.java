@@ -27,6 +27,14 @@ public class AuthController {
     }
 
     /**
+     * Server Health and Warmup endpoint (for pinging and keeping Render instance awake)
+     */
+    @GetMapping("/health")
+    public ResponseEntity<?> health() {
+        return ResponseEntity.ok(Collections.singletonMap("status", "UP"));
+    }
+
+    /**
      * User Login endpoint: verifies BCrypt password, generates JWT, saves in JWT_tokens table
      */
     @PostMapping("/login")

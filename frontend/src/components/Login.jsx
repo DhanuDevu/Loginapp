@@ -12,6 +12,7 @@ const Login = () => {
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [slowNotice, setSlowNotice] = useState(false);
   const [serverError, setServerError] = useState('');
 
   const handleChange = (e) => {
@@ -53,6 +54,13 @@ const Login = () => {
     }
 
     setLoading(true);
+    setSlowNotice(false);
+
+    // If server is cold-starting on Render, alert user gently after 2.5s
+    const timer = setTimeout(() => {
+      setSlowNotice(true);
+    }, 2500);
+
     try {
       const response = await loginUser({
         name: formData.name.trim(),
@@ -67,7 +75,9 @@ const Login = () => {
     } catch (err) {
       setServerError(err.message || 'Invalid credentials. Please try again.');
     } finally {
+      clearTimeout(timer);
       setLoading(false);
+      setSlowNotice(false);
     }
   };
 
@@ -151,6 +161,13 @@ const Login = () => {
               'Login'
             )}
           </button>
+
+          {loading && slowNotice && (
+            <div className="server-status-pill">
+              <span className="server-status-dot"></span>
+              <span>Waking up cloud server (Render free tier can take ~30-50s on initial load)...</span>
+            </div>
+          )}
         </form>
 
         {/* Hyperlink below it to redirect to the Signup page for users who do not have an account */}

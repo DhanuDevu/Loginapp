@@ -27,6 +27,14 @@ public class CorsConfig {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.toList());
+
+        if (!origins.contains("https://*.vercel.app") && !origins.contains("*")) {
+            origins.add("https://*.vercel.app");
+        }
+        if (!origins.contains("http://localhost:5173") && !origins.contains("*")) {
+            origins.add("http://localhost:5173");
+        }
+
         config.setAllowedOriginPatterns(origins);
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
